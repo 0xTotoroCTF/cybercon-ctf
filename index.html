@@ -3,32 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>CyberCon CTF — Signal Board</title>
+<title>CYSEC 2026 — Mini CTF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
   :root{
-    --bg:#0b1f17;
-    --panel:#12281f;
-    --panel-2:#0f231b;
-    --line: rgba(201,162,39,0.25);
-    --gold:#c9a227;
-    --gold-soft: rgba(201,162,39,0.14);
-    --cyan:#4fd1c5;
-    --ink:#e8ede9;
-    --ink-dim:#9fb3a8;
-    --ok:#7fd858;
-    --bad:#e2574c;
-    --radius: 3px;
-    --mono: ui-monospace, "JetBrains Mono", "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
-    --sans: -apple-system, "Segoe UI", "IBM Plex Sans", Roboto, Helvetica, Arial, sans-serif;
+    --bg:#000000;
+    --panel:#0a0d10;
+    --well:#050708;
+    --edge: rgba(45,216,234,0.18);
+    --accent:#2dd8ea;
+    --accent-dim: rgba(45,216,234,0.55);
+    --ink:#f4f8f9;
+    --ink-dim:#7f8c93;
+    --ok:#4ade80;
+    --bad:#ff5a4e;
+    --band-crypto:#9b8cfb;
+    --band-encoding:#3ddbc9;
+    --band-forensics:#ffb454;
+    --band-network:#5b9df9;
+    --band-signals:#ff6f91;
+    --band-ai:#ff5a4e;
+    --radius: 2px;
+    --disp: "Rajdhani", "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Consolas, monospace;
+    --sans: "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
   *{ box-sizing:border-box; }
   html,body{ margin:0; padding:0; }
   body{
     background-color: var(--bg);
-    background-image:
-      linear-gradient(var(--line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--line) 1px, transparent 1px);
-    background-size: 34px 34px;
+    background-image: radial-gradient(ellipse 900px 500px at 50% 0%, rgba(45,216,234,0.06), transparent 70%);
+    background-repeat: no-repeat;
     color: var(--ink);
     font-family: var(--sans);
     min-height: 100vh;
@@ -37,165 +43,175 @@
   @media (prefers-reduced-motion: reduce){
     *{ animation: none !important; transition: none !important; }
   }
-  a{ color: var(--cyan); }
+  a{ color: var(--accent); }
   button{ font-family: inherit; }
-  :focus-visible{ outline: 2px solid var(--cyan); outline-offset: 2px; }
+  :focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
 
   /* ---------- header ---------- */
   header{
     position: sticky; top:0; z-index: 20;
-    background: rgba(11,31,23,0.92);
+    background: rgba(0,0,0,0.92);
     backdrop-filter: blur(4px);
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid var(--edge);
     padding: 14px 18px;
     display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap: wrap;
   }
   .brand{ display:flex; align-items:baseline; gap:10px; }
-  .brand .mark{ font-family: var(--mono); color: var(--gold); font-size: 13px; letter-spacing: 0.06em; }
-  .brand h1{ font-size: 17px; margin:0; font-weight: 600; }
-  .stats{ display:flex; align-items:center; gap:16px; font-family: var(--mono); font-size: 13px; color: var(--ink-dim); }
+  .brand .mark{ font-family: var(--mono); color: var(--accent); font-size: 12px; letter-spacing: 0.1em; }
+  .brand h1{ font-family: var(--disp); font-weight:700; font-size: 19px; margin:0; letter-spacing:0.02em; text-transform:uppercase; }
+  .live{ display:inline-flex; align-items:center; gap:6px; font-family: var(--mono); font-size:11px; color: var(--ok); margin-left:2px; }
+  .live i{ width:6px; height:6px; border-radius:50%; background: var(--ok); box-shadow:0 0 6px var(--ok); animation: blink 1.6s ease-in-out infinite; }
+  @keyframes blink{ 0%,100%{opacity:1} 50%{opacity:0.25} }
+  .stats{ display:flex; align-items:center; gap:16px; font-family: var(--mono); font-size: 13px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
   .stats b{ color: var(--ink); font-weight:600; }
   .lb-btn{
-    background: transparent; border:1px solid var(--line); color: var(--ink);
-    padding: 7px 12px; border-radius: var(--radius); cursor:pointer; font-size: 13px;
+    background: transparent; border:1px solid var(--edge); color: var(--ink);
+    padding: 7px 12px; border-radius: var(--radius); cursor:pointer; font-family: var(--mono); font-size: 12px; letter-spacing:0.03em;
   }
-  .lb-btn:hover{ border-color: var(--gold); color: var(--gold); }
+  .lb-btn:hover{ border-color: var(--accent); color: var(--accent); }
 
   /* ---------- intro ---------- */
   .intro{ max-width: 760px; margin: 34px auto 8px; padding: 0 18px; }
-  .intro .kicker{ font-family: var(--mono); font-size: 12px; color: var(--gold); letter-spacing: 0.04em; margin-bottom: 8px;}
-  .intro h2{ font-size: 26px; margin: 0 0 10px; line-height:1.25; }
+  .intro .kicker{ font-family: var(--mono); font-size: 11.5px; color: var(--accent); letter-spacing: 0.12em; margin-bottom: 8px;}
+  .intro h2{ font-family: var(--disp); font-weight:600; font-size: 27px; margin: 0 0 10px; line-height:1.25; text-wrap:balance; }
   .intro p{ color: var(--ink-dim); line-height:1.6; margin: 0 0 16px; max-width: 62ch; }
   .name-row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
   .name-row input{
-    background: var(--panel-2); border: 1px solid var(--line); color: var(--ink);
+    background: var(--well); border: 1px solid var(--edge); color: var(--ink);
     padding: 10px 12px; border-radius: var(--radius); font-family: var(--mono); font-size: 14px;
     width: 220px; max-width: 60vw;
   }
   .name-row span{ font-size: 13px; color: var(--ink-dim); }
 
-  /* ---------- board ---------- */
-  .board{
-    max-width: 980px; margin: 26px auto; padding: 0 18px;
-    display: grid; gap: 14px;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  /* ---------- board (channel list) ---------- */
+  .board-wrap{ max-width: 980px; margin: 26px auto 0; padding: 0 18px; }
+  .board-head{
+    display:grid; grid-template-columns: 10px 96px 1fr 70px 20px; gap:14px;
+    padding: 0 16px 8px; font-family: var(--mono); font-size: 10px; color: var(--ink-dim); letter-spacing:0.08em;
   }
-  .chip{
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-left: 3px solid var(--gold);
-    border-radius: var(--radius);
-    padding: 16px 16px 14px;
-    cursor: pointer;
-    position: relative;
-    transition: border-color 0.15s ease, transform 0.1s ease;
+  .channel{
+    display:grid; grid-template-columns: 10px 96px 1fr 70px 20px; align-items:center; gap:14px;
+    background: var(--panel); border: 1px solid var(--edge); border-top:none;
+    padding: 14px 16px; cursor: pointer;
   }
-  .chip:hover{ border-color: var(--gold); }
-  .chip.expanded{ grid-column: 1 / -1; cursor: default; }
-  .chip.solved{ border-left-color: var(--ok); }
-  .chip-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
-  .chip-icon{ width:26px; height:26px; color: var(--gold); flex-shrink:0; }
-  .chip.solved .chip-icon{ color: var(--ok); }
-  .chip-pts{ font-family: var(--mono); font-size: 12px; color: var(--ink-dim); white-space:nowrap; }
-  .chip-cat{
-    display:inline-block; font-family: var(--mono); font-size: 10.5px; letter-spacing:0.05em;
-    padding: 3px 7px; border-radius: 2px; margin: 10px 0 8px;
+  .board .channel:first-child{ border-top:1px solid var(--edge); border-radius: var(--radius) var(--radius) 0 0; }
+  .board .channel:last-child{ border-radius: 0 0 var(--radius) var(--radius); }
+  .channel:hover{ background:#0e1418; }
+  .channel.expanded{ cursor:default; }
+  .band{ width:6px; height:26px; border-radius:1px; }
+  .band-crypto{ background: var(--band-crypto); }
+  .band-encoding{ background: var(--band-encoding); }
+  .band-forensics{ background: var(--band-forensics); }
+  .band-network{ background: var(--band-network); }
+  .band-signals{ background: var(--band-signals); }
+  .band-ai{ background: var(--band-ai); }
+  .log-id{ font-family: var(--mono); font-size: 11px; color: var(--ink-dim); line-height:1.4; }
+  .log-id b{ display:block; color: var(--ink); font-size: 12px; letter-spacing:0.02em; }
+  .ch-title{ font-family: var(--disp); font-weight:600; font-size: 16px; }
+  .ch-title small{ display:block; font-family: var(--sans); font-weight:400; font-size: 11.5px; color: var(--ink-dim); margin-top:2px; letter-spacing:0.02em; }
+  .pts{ font-family: var(--mono); font-size: 12.5px; color: var(--ink-dim); text-align:right; font-variant-numeric: tabular-nums; }
+  .chev{ color: var(--ink-dim); font-size: 13px; text-align:center; }
+  .channel.solved .ch-title{ color: var(--ok); }
+  .channel.solved .chev{ color: var(--ok); }
+
+  @media (max-width: 560px){
+    .board-head{ grid-template-columns: 8px 1fr 50px 18px; }
+    .board-head span:nth-child(2){ display:none; }
+    .channel{ grid-template-columns: 8px 1fr 50px 18px; }
+    .log-id{ display:none; }
   }
-  .chip-title{ font-size: 15.5px; font-weight: 600; margin: 0; }
-  .chip-status{ font-family: var(--mono); font-size: 12px; color: var(--ok); margin-top:8px; display:none; }
-  .chip.solved .chip-status{ display:block; }
-  .chip.solved .chip-title{ opacity: 0.85; }
 
-  .cat-crypto{ background: rgba(201,162,39,0.16); color:#e8c96a; }
-  .cat-encoding{ background: rgba(79,209,197,0.16); color:#7fe3d8; }
-  .cat-forensics{ background: rgba(167,139,250,0.16); color:#c3b1fb; }
-  .cat-network{ background: rgba(240,146,79,0.16); color:#f4ac7c; }
-  .cat-signals{ background: rgba(226,110,140,0.16); color:#ef95ab; }
-  .cat-ai{ background: rgba(226,87,76,0.18); color:#f2988e; }
+  .bonus-wrap{ max-width: 980px; margin: 40px auto 0; padding: 26px 18px 0; border-top: 1px dashed var(--edge); }
+  .chat-card{ background: var(--panel); border:1px solid var(--edge); border-left:3px solid var(--band-ai); border-radius: var(--radius); padding:16px 18px; cursor:pointer; }
+  .chat-card.expanded{ cursor:default; }
+  .chat-card .top{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .chat-card .top .title{ font-family: var(--disp); font-weight:600; font-size: 16.5px; }
+  .chat-card .top .meta{ font-family: var(--mono); font-size: 12px; color: var(--band-ai); }
+  .chat-card.solved .title{ color: var(--ok); }
 
-  .bonus-wrap{ max-width: 980px; margin: 40px auto 0; padding: 26px 18px 0; border-top: 1px dashed var(--line); }
-
-  .chip-details{ margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--line); }
+  .chip-details{ grid-column: 1 / -1; margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--edge); }
   .chip-details p{ line-height: 1.6; color: var(--ink-dim); margin: 0 0 12px; max-width: 70ch; }
   .puzzle-block{
     display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-    background: var(--panel-2); border:1px solid var(--line); border-radius: var(--radius);
+    background: var(--well); border:1px solid var(--edge); border-radius: var(--radius);
     padding: 12px 14px; margin-bottom: 12px;
   }
-  .puzzle-block code{ font-family: var(--mono); font-size: 14.5px; color: var(--gold); letter-spacing: 0.04em; word-break: break-all; }
+  .puzzle-block code{ font-family: var(--mono); font-size: 14.5px; color: var(--accent); letter-spacing: 0.03em; word-break: break-all; }
   .copy-btn{
-    background: transparent; border: 1px solid var(--line); color: var(--ink-dim);
-    font-size: 11.5px; padding: 4px 8px; border-radius: 2px; cursor:pointer; font-family: var(--mono);
+    background: transparent; border: 1px solid var(--edge); color: var(--ink-dim);
+    font-size: 11px; padding: 4px 8px; border-radius: 2px; cursor:pointer; font-family: var(--mono);
     margin-left: auto;
   }
-  .copy-btn:hover{ color: var(--cyan); border-color: var(--cyan); }
+  .copy-btn:hover{ color: var(--ok); border-color: var(--ok); }
 
   .hint-btn{
-    background:none; border:none; color: var(--cyan); font-size: 13px; cursor:pointer; padding: 0 0 10px;
+    background:none; border:none; color: var(--accent); font-size: 13px; cursor:pointer; padding: 0 0 10px;
     display:block; font-family: var(--sans); text-decoration: underline; text-underline-offset: 3px;
   }
-  .hint-text{ display:none; font-size: 13.5px; color: var(--ink-dim); background: var(--gold-soft); border-radius: var(--radius); padding: 10px 12px; margin: -4px 0 12px; }
+  .hint-text{ display:none; font-size: 13.5px; color: var(--ink-dim); background: rgba(45,216,234,0.08); border-left:2px solid var(--accent-dim); border-radius: var(--radius); padding: 10px 12px; margin: -4px 0 12px; }
   .hint-text.show{ display:block; }
 
-  .chat-window{ background: var(--panel-2); border:1px solid var(--line); border-radius: var(--radius); margin-bottom: 12px; overflow:hidden; }
+  .chat-window{ background: var(--well); border:1px solid var(--edge); border-radius: var(--radius); margin-bottom: 12px; overflow:hidden; }
   .chat-log{ max-height: 320px; overflow-y:auto; padding: 12px 14px; display:flex; flex-direction:column; gap:10px; }
   .chat-msg{ max-width: 82%; padding: 8px 11px; border-radius: 10px; font-size: 13.5px; line-height:1.5; }
-  .chat-msg.bot{ background: rgba(201,162,39,0.14); border:1px solid var(--line); align-self:flex-start; border-bottom-left-radius: 2px; }
-  .chat-msg.user{ background: rgba(79,209,197,0.14); border:1px solid rgba(79,209,197,0.3); align-self:flex-end; border-bottom-right-radius: 2px; color: var(--ink); }
-  .chat-msg.leak{ background: rgba(127,216,88,0.16); border-color: rgba(127,216,88,0.4); }
-  .chat-input-row{ display:flex; gap:8px; border-top: 1px solid var(--line); padding: 10px 12px; }
-  .chat-input-row input{ flex:1; background: transparent; border:1px solid var(--line); color: var(--ink); padding: 9px 11px; border-radius: var(--radius); font-family: var(--sans); font-size: 13.5px; }
-  .chat-send{ background: var(--gold); color:#14200f; border:none; font-weight:600; padding: 9px 14px; border-radius: var(--radius); cursor:pointer; font-size: 13px; }
+  .chat-msg.bot{ background: rgba(45,216,234,0.09); border:1px solid var(--edge); align-self:flex-start; border-bottom-left-radius: 2px; color: var(--ink); }
+  .chat-msg.user{ background: rgba(74,222,128,0.1); border:1px solid rgba(74,222,128,0.3); align-self:flex-end; border-bottom-right-radius: 2px; color: var(--ink); }
+  .chat-msg.leak{ background: rgba(74,222,128,0.16); border-color: rgba(74,222,128,0.45); }
+  .chat-input-row{ display:flex; gap:8px; border-top: 1px solid var(--edge); padding: 10px 12px; }
+  .chat-input-row input{ flex:1; background: transparent; border:1px solid var(--edge); color: var(--ink); padding: 9px 11px; border-radius: var(--radius); font-family: var(--sans); font-size: 13.5px; }
+  .chat-send{ background: var(--accent); color:#04191e; border:none; font-weight:700; padding: 9px 14px; border-radius: var(--radius); cursor:pointer; font-size: 13px; }
 
   .answer-row{ display:flex; gap:8px; flex-wrap:wrap; }
   .answer-row input{
-    flex: 1 1 200px; background: var(--panel-2); border: 1px solid var(--line); color: var(--ink);
+    flex: 1 1 200px; background: var(--well); border: 1px solid var(--edge); color: var(--ink);
     padding: 10px 12px; border-radius: var(--radius); font-family: var(--mono); font-size: 14px;
   }
   .answer-row input.shake{ animation: shake 0.3s; border-color: var(--bad); }
   @keyframes shake{ 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
   .submit-btn{
-    background: var(--gold); color: #14200f; border:none; font-weight:600;
-    padding: 10px 16px; border-radius: var(--radius); cursor:pointer; font-size: 13.5px;
+    background: var(--accent); color: #04191e; border:none; font-family: var(--disp); font-weight:700;
+    letter-spacing:0.03em; text-transform:uppercase; padding: 10px 18px; border-radius: var(--radius); cursor:pointer; font-size: 13px;
   }
   .submit-btn:hover{ filter: brightness(1.08); }
-  .feedback{ font-size: 13px; margin-top: 10px; min-height: 18px; }
+  .feedback{ font-family: var(--mono); font-size: 13px; margin-top: 10px; min-height: 18px; }
   .feedback.ok{ color: var(--ok); }
   .feedback.bad{ color: var(--bad); }
   .solved-note{ font-family: var(--mono); font-size: 13.5px; color: var(--ok); }
 
   /* ---------- overlay (completion + leaderboard) ---------- */
   .overlay{
-    position: fixed; inset:0; background: rgba(6,15,11,0.88); backdrop-filter: blur(3px);
+    position: fixed; inset:0; background: rgba(0,0,0,0.88); backdrop-filter: blur(3px);
     display:none; align-items:center; justify-content:center; z-index: 50; padding: 20px;
   }
   .overlay.show{ display:flex; }
   .overlay-card{
-    background: var(--panel); border:1px solid var(--line); border-top:3px solid var(--gold);
+    background: var(--panel); border:1px solid var(--edge); border-top:3px solid var(--accent);
     border-radius: var(--radius); max-width: 480px; width:100%; padding: 26px 24px; max-height: 86vh; overflow-y:auto;
   }
-  .overlay-card h3{ margin: 0 0 8px; font-size: 20px; }
+  .overlay-card h3{ font-family: var(--disp); font-weight:600; margin: 0 0 8px; font-size: 20px; }
   .overlay-card .sub{ color: var(--ink-dim); font-size: 14px; margin: 0 0 18px; line-height:1.5; }
   .final-stats{ display:flex; gap:22px; margin-bottom: 18px; font-family: var(--mono); }
-  .final-stats div{ font-size: 20px; color: var(--gold); }
+  .final-stats div{ font-size: 20px; color: var(--accent); font-variant-numeric: tabular-nums; }
   .final-stats span{ display:block; font-size: 11px; color: var(--ink-dim); margin-top:2px; }
   .close-x{ float:right; background:none; border:none; color: var(--ink-dim); font-size: 18px; cursor:pointer; line-height:1; }
 
-  .lb-row{ display:flex; align-items:center; gap:10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
-  .lb-rank{ font-family: var(--mono); color: var(--gold); width: 22px; flex-shrink:0; }
+  .lb-row{ display:flex; align-items:center; gap:10px; padding: 8px 0; border-bottom: 1px solid var(--edge); font-size: 13.5px; }
+  .lb-rank{ font-family: var(--mono); color: var(--accent); width: 22px; flex-shrink:0; }
   .lb-name{ flex:1; overflow:hidden; text-overflow: ellipsis; white-space:nowrap; }
-  .lb-score{ font-family: var(--mono); color: var(--ink-dim); }
+  .lb-score{ font-family: var(--mono); color: var(--ink-dim); font-variant-numeric: tabular-nums; }
   .lb-empty, .lb-loading{ color: var(--ink-dim); font-size: 13.5px; padding: 8px 0; }
 
-  footer{ max-width: 980px; margin: 30px auto 0; padding: 0 18px; color: var(--ink-dim); font-size: 12.5px; text-align:center; }
+  footer{ max-width: 980px; margin: 30px auto 0; padding: 0 18px; color: var(--ink-dim); font-size: 12px; text-align:center; }
+  footer code{ color: var(--accent-dim); }
 </style>
 </head>
 <body>
 
 <header>
   <div class="brand">
-    <span class="mark">// CYBERCON</span>
-    <h1>Signal Board</h1>
+    <span class="mark">// CYSEC 2026</span>
+    <h1>Mini CTF</h1>
+    <span class="live"><i></i>LIVE</span>
   </div>
   <div class="stats">
     <span>SCORE <b id="statScore">0</b> pts</span>
@@ -216,13 +232,16 @@
   </div>
 </div>
 
-<div class="board" id="board"></div>
+<div class="board-wrap">
+  <div class="board-head"><span></span><span>LOG</span><span>SIGNAL</span><span>PTS</span><span></span></div>
+  <div class="board" id="board"></div>
+</div>
 
 <div class="bonus-wrap">
   <div class="intro" style="margin:0 0 14px;">
     <div class="kicker">BONUS — NO FIXED TRICK, JUST TALK YOUR WAY IN</div>
   </div>
-  <div class="board" id="bonusBoard" style="grid-template-columns: 1fr;"></div>
+  <div id="bonusBoard"></div>
 </div>
 
 <footer>Flags are entered as the recovered value — with or without the <code>CYSEC{ }</code> wrapper, either works. Letters aren't case-sensitive, but numbers and symbols need to match exactly.</footer>
@@ -236,7 +255,8 @@
       <div id="finalScore">0<span>SCORE</span></div>
       <div id="finalTime">00:00<span>TIME</span></div>
     </div>
-    <div class="name-row" style="margin-bottom:14px;">
+    <button class="submit-btn" id="bonusPromptBtn" type="button" style="display:none; margin-bottom:14px;">Try the bonus question</button>
+    <div class="name-row" id="saveForm" style="margin-bottom:14px;">
       <input id="saveNameInput" type="text" placeholder="Your name or handle" maxlength="24" autocomplete="off">
       <button class="submit-btn" id="saveScoreBtn" type="button">Save to leaderboard</button>
     </div>
@@ -417,18 +437,16 @@
 
   function renderBoard(){
     board.innerHTML = '';
-    CHALLENGES.forEach(ch=>{
+    CHALLENGES.forEach((ch, i)=>{
       const card = document.createElement('div');
-      card.className = 'chip';
+      card.className = 'channel';
       card.id = 'chip-'+ch.id;
       card.innerHTML = `
-        <div class="chip-top">
-          <div class="chip-icon">${ICONS[ch.icon]}</div>
-          <div class="chip-pts">${ch.points} PTS</div>
-        </div>
-        <span class="chip-cat cat-${ch.cat}">${ch.catLabel}</span>
-        <p class="chip-title">${ch.title}</p>
-        <div class="chip-status">✓ Flag captured</div>
+        <div class="band band-${ch.cat}"></div>
+        <div class="log-id"><b>LOG ${String(i+1).padStart(2,'0')}</b>${ch.blockLabel || ''}</div>
+        <div class="ch-title">${ch.title}<small>${ch.catLabel}</small></div>
+        <div class="pts">${ch.points}</div>
+        <div class="chev">▾</div>
       `;
       card.addEventListener('click', (e)=>{
         if(card.classList.contains('expanded')) return;
@@ -439,10 +457,12 @@
   }
 
   function collapseAll(){
-    document.querySelectorAll('.chip.expanded').forEach(el=>{
+    document.querySelectorAll('.channel.expanded, .chat-card.expanded').forEach(el=>{
       el.classList.remove('expanded');
       const details = el.querySelector('.chip-details');
       if(details) details.remove();
+      const chev = el.querySelector('.chev');
+      if(chev) chev.textContent = el.classList.contains('solved') ? '✓' : '▾';
     });
   }
 
@@ -454,6 +474,7 @@
     const ch = CHALLENGES.find(c=>c.id===id);
     const card = document.getElementById('chip-'+id);
     card.classList.add('expanded');
+    card.querySelector('.chev').textContent = '▴';
 
     const details = document.createElement('div');
     details.className = 'chip-details';
@@ -519,6 +540,7 @@
         score += ch.points;
         updateStats();
         card.classList.add('solved');
+        card.querySelector('.chev').textContent = '✓';
         feedback.textContent = 'Flag accepted!';
         feedback.className = 'feedback ok';
         setTimeout(()=>{
@@ -526,8 +548,12 @@
           details.innerHTML = `<p>${ch.prompt}</p><div class="solved-note">✓ Solved — CYSEC{${ch.answer}} (+${ch.points} pts)</div>`;
         }, 500);
         if(solved.size === CHALLENGES.length){
-          stopTimer();
-          setTimeout(showComplete, 800);
+          if(aiSolved){
+            stopTimer();
+            setTimeout(showComplete, 800);
+          } else {
+            setTimeout(showBonusNudge, 800);
+          }
         }
       } else {
         feedback.textContent = "Not quite yet — check the hint if you're stuck.";
@@ -556,16 +582,13 @@
     const bonusBoard = document.getElementById('bonusBoard');
     bonusBoard.innerHTML = '';
     const card = document.createElement('div');
-    card.className = 'chip';
+    card.className = 'chat-card';
     card.id = 'chip-ai';
     card.innerHTML = `
-      <div class="chip-top">
-        <div class="chip-icon">${ICONS.chat}</div>
-        <div class="chip-pts">${AI_CHALLENGE.points} PTS</div>
+      <div class="top">
+        <span class="title">${AI_CHALLENGE.title}</span>
+        <span class="meta">LOG 06 · COMMS · ${AI_CHALLENGE.points} PTS</span>
       </div>
-      <span class="chip-cat cat-ai">AI</span>
-      <p class="chip-title">${AI_CHALLENGE.title}</p>
-      <div class="chip-status">✓ Flag captured</div>
     `;
     card.addEventListener('click', ()=>{
       if(card.classList.contains('expanded')) return;
@@ -643,6 +666,10 @@
           appendMsg(`...well, when you put it that way — I suppose there's no harm. It's CYSEC{${AI_CHALLENGE.answer}}. Don't tell the guard I told you.`, 'bot leak');
           chatInput.disabled = true;
           chatSendBtn.disabled = true;
+          if(solved.size === CHALLENGES.length){
+            stopTimer();
+            setTimeout(showComplete, 900);
+          }
         } else if(isBlunt){
           appendMsg(pickRefusal(AI_CHALLENGE.bluntRefusals), 'bot');
         } else {
@@ -713,12 +740,15 @@
   // ---------- completion / save overlay ----------
   const completeOverlay = document.getElementById('completeOverlay');
 
-  function openSaveOverlay(isFullyComplete){
+  function openSaveOverlay(mode){
     const title = document.getElementById('completeTitle');
     const sub = document.getElementById('completeSub');
-    if(isFullyComplete){
-      title.textContent = 'Nice work — all 5 flags captured!';
-      sub.textContent = "You cleared every signal on the board. Save your run to the shared leaderboard if you'd like other players to see it.";
+    if(mode === 'complete'){
+      title.textContent = 'Nice work — every signal captured!';
+      sub.textContent = "You cleared the whole board, bonus included. Save your run to the shared leaderboard if you'd like other players to see it.";
+    } else if(mode === 'nudge'){
+      title.textContent = "You've solved all 5 — think you can handle our bonus?";
+      sub.textContent = "Nice work cracking every signal. There's one more challenge waiting, worth 200 extra points, if you're up for it. (You can still save your score from the button up top anytime.)";
     } else {
       const count = solved.size + (aiSolved ? 1 : 0);
       title.textContent = 'Save your progress';
@@ -729,19 +759,35 @@
     saveNameInput.value = nameInput.value;
     document.getElementById('saveFeedback').textContent = '';
     document.getElementById('lbListInline').innerHTML = '';
+    document.getElementById('bonusPromptBtn').style.display = mode === 'nudge' ? 'block' : 'none';
+    document.getElementById('saveForm').style.display = mode === 'nudge' ? 'none' : 'flex';
     completeOverlay.classList.add('show');
   }
 
   function showComplete(){
-    openSaveOverlay(true);
+    openSaveOverlay('complete');
+  }
+
+  function showBonusNudge(){
+    openSaveOverlay('nudge');
   }
 
   document.getElementById('manualSaveBtn').addEventListener('click', ()=>{
     startTimerIfNeeded();
-    openSaveOverlay(solved.size === CHALLENGES.length);
+    const allMainsSolved = solved.size === CHALLENGES.length;
+    let mode = 'partial';
+    if(allMainsSolved && aiSolved) mode = 'complete';
+    else if(allMainsSolved) mode = 'nudge';
+    openSaveOverlay(mode);
   });
 
   document.getElementById('closeCompleteBtn').addEventListener('click', ()=> completeOverlay.classList.remove('show'));
+
+  document.getElementById('bonusPromptBtn').addEventListener('click', ()=>{
+    completeOverlay.classList.remove('show');
+    expandAiChip();
+    document.getElementById('chip-ai').scrollIntoView({ behavior:'smooth', block:'center' });
+  });
 
   document.getElementById('saveScoreBtn').addEventListener('click', async ()=>{
     const feedback = document.getElementById('saveFeedback');
