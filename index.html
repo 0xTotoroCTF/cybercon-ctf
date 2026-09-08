@@ -254,7 +254,17 @@
   </div>
 </div>
 
-<script type="module">
+<!--
+  Firebase is loaded via the "compat" (non-module) builds below instead of
+  the modern ES-module SDK. The module SDK requires `import` statements,
+  which browsers refuse to run when the page is opened directly from disk
+  (a file:// URL) — that's what was flooding the console. The compat build
+  is a plain global-namespace script, so it works the same whether this
+  page is opened by double-click or served over http(s).
+-->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
   // ===== Firebase setup =====
   // Paste the config object from your Firebase project here — see the
   // setup steps for exactly where to get this (Project settings > General
@@ -270,15 +280,10 @@
     appId: "1:31607650668:web:1eb53d14d1ee4485279b49"
   };
 
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import {
-    getFirestore, collection, doc, setDoc, getDocs, query, orderBy, limit
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
   let db = null;
   try{
-    const app = initializeApp(firebaseConfig);
-    db = getFirestore(app);
+    const app = firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore(app);
   }catch(e){
     console.error('Firebase failed to initialize — check firebaseConfig.', e);
   }
@@ -659,8 +664,7 @@
   async function fetchLeaderboard(){
     if(!db) return null;
     try{
-      const q = query(collection(db, 'leaderboard'), orderBy('score', 'desc'), limit(10));
-      const snap = await getDocs(q);
+      const snap = await db.collection('leaderboard').orderBy('score', 'desc').limit(10).get();
       const entries = [];
       snap.forEach(docSnap => entries.push(docSnap.data()));
       // secondary sort by time client-side, in case of a tied score within this page
@@ -753,7 +757,7 @@
       // stable per-session doc id: saving again updates this player's own
       // entry instead of leaving old, lower-score entries behind on the board
       const entryId = slugify(name) + '-' + sessionId;
-      await setDoc(doc(db, 'leaderboard', entryId), { name, score, timeSeconds: elapsedSeconds });
+      await db.collection('leaderboard').doc(entryId).set({ name, score, timeSeconds: elapsedSeconds });
       feedback.textContent = 'Saved! Here is the board:';
       feedback.className = 'feedback ok';
       const entries = await fetchLeaderboard();
