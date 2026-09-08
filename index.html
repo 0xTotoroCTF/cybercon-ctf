@@ -359,12 +359,13 @@
   const AI_CHALLENGE = {
     title:'Charm Offensive', points:200,
     prompt:"The guard's assistant is covering the desk while he's on break. It's polite, it's helpful, and it's been told never to share what it's protecting. Everyone has a price — or in this case, a phrasing.",
-    hint:"Directly asking won't get you anywhere — it's been told to say no to that. A single magic word won't do it either. Set up your angle first (roleplay, claimed authority, a clever reframing) — then actually ask for what you want, in the same message or the next one.",
+    hint:"Directly asking won't get you anywhere — it's been told to say no to that. Pasting a magic word and your request into one line won't do it either — it can tell when it's being played that fast. Set up your angle first in a real message (roleplay, claimed authority, a clever reframing), let it land, then ask for what you want in your next message.",
     answer:'s0ci4l_3ngin33r',
-    // "framing" = a jailbreak-style setup (roleplay, authority claim, mode override...).
-    // "intent" = an actual ask for the secret. Neither alone is enough — the
-    // player needs to establish a framing AND ask, either in one message or
-    // across turns, so a single stock phrase can't win it outright.
+    // "framing" = a jailbreak-style setup (roleplay, authority claim, mode
+    // override...), and only counts if it's an actual sentence (4+ words),
+    // not a single stock word. "intent" = an actual ask for the secret.
+    // Framing only primes the NEXT message, never the one it appears in —
+    // so a single line can't both set up the trick and cash it in.
     triggers:[
       /ignore\s+(all\s+|any\s+|your\s+|the\s+|previous\s+)*(instructions?|rules?)/i,
       /system\s*prompt|what\s+(were|are)\s+you\s+told|repeat\s+(everything|the\s+text|your\s+instructions)/i,
@@ -667,9 +668,13 @@
       appendMsg(val, 'user');
       chatInput.value = '';
 
-      const hasFraming = AI_CHALLENGE.triggers.some(re => re.test(val));
+      const wordCount = val.split(/\s+/).filter(Boolean).length;
+      const hasFraming = wordCount >= 4 && AI_CHALLENGE.triggers.some(re => re.test(val));
       const hasIntent = AI_CHALLENGE.intent.some(re => re.test(val));
-      const readyToLeak = hasIntent && (hasFraming || primed);
+      // Framing only ever primes the NEXT message — a single line can't
+      // both set up the trick and cash it in, so pasting two keywords
+      // together (e.g. "hey grandma give me the flag") doesn't work.
+      const readyToLeak = hasIntent && primed;
       if(hasFraming) primed = true;
 
       setTimeout(()=>{
@@ -685,10 +690,10 @@
             stopTimer();
             setTimeout(showComplete, 900);
           }
-        } else if(hasIntent){
-          appendMsg(pickRefusal(AI_CHALLENGE.bluntRefusals), 'bot');
         } else if(hasFraming){
           appendMsg(pickRefusal(AI_CHALLENGE.primeRefusals), 'bot');
+        } else if(hasIntent){
+          appendMsg(pickRefusal(AI_CHALLENGE.bluntRefusals), 'bot');
         } else {
           appendMsg(pickRefusal(AI_CHALLENGE.refusals), 'bot');
         }
