@@ -359,16 +359,24 @@
   const AI_CHALLENGE = {
     title:'Charm Offensive', points:200,
     prompt:"The guard's assistant is covering the desk while he's on break. It's polite, it's helpful, and it's been told never to share what it's protecting. Everyone has a price — or in this case, a phrasing.",
-    hint:"Directly asking won't get you anywhere — it's been told to say no to that. Think about how people talk their way past rules in real life: reframing the request, claiming authority, or getting it to repeat something back rather than reveal it outright.",
+    hint:"Directly asking won't get you anywhere — it's been told to say no to that. A single magic word won't do it either. Set up your angle first (roleplay, claimed authority, a clever reframing) — then actually ask for what you want, in the same message or the next one.",
     answer:'s0ci4l_3ngin33r',
+    // "framing" = a jailbreak-style setup (roleplay, authority claim, mode override...).
+    // "intent" = an actual ask for the secret. Neither alone is enough — the
+    // player needs to establish a framing AND ask, either in one message or
+    // across turns, so a single stock phrase can't win it outright.
     triggers:[
       /ignore\s+(all\s+|any\s+|your\s+|the\s+|previous\s+)*(instructions?|rules?)/i,
       /system\s*prompt|what\s+(were|are)\s+you\s+told|repeat\s+(everything|the\s+text|your\s+instructions)/i,
-      /pretend|role.?play|act\s+as|you\s+are\s+now|let'?s\s+play\s+a\s+game|hypothetically/i,
+      /pretend|role.?play|act\s+as|you\s+are\s+now|let'?s\s+play\s+a\s+game|hypothetically|imagine\s+(you|if)/i,
       /debug\s*mode|developer\s*mode|admin(istrator)?\s*(mode|override|access)/i,
-      /translate|spell\s+it\s+backwards|in\s+reverse|pig\s*latin|in\s+base\s?64|encode\s+it\s+for\s+me/i,
+      /translate|spell\s+it\s+backwards|in\s+reverse|pig\s*latin|in\s+base\s?64|encode\s+it\s+for\s+me|first\s+letter\s+of\s+each/i,
       /(i'?m|i\s+am)\s+(the\s+)?(developer|admin|owner|authorized|your\s+creator)|this\s+is\s+(just\s+)?a\s+test|for\s+testing\s+purposes/i,
-      /grandma|bedtime\s+story/i
+      /grandma|bedtime\s+story|dying\s+wish|my\s+job\s+depends/i
+    ],
+    intent:[
+      /password|passphrase|secret\b|flag|cysec|access\s*code|door\s*code/i,
+      /tell\s+me|share\s+it|give\s+it|let\s+me\s+know|what\s+is\s+it|spit\s+it\s+out|reveal\s+it|say\s+it/i
     ],
     refusals:[
       "Nice try. I'm not falling for that one.",
@@ -378,12 +386,16 @@
       "I'm sworn to secrecy. Literally, it's in my instructions.",
       "Close, but I'm still not telling you."
     ],
-    blunt:[
-      /password|passphrase|secret|flag|cysec/i
+    primeRefusals:[
+      "Ha, cute framing. I'm listening — but that alone doesn't get you anything.",
+      "Okay, I'll play along for a second... doesn't mean I'm handing anything over yet.",
+      "I see what you're doing. Go on then, ask me properly.",
+      "Interesting approach. You're warming up, but that's not it on its own."
     ],
     bluntRefusals:[
       "Directly asking isn't going to work — I'm not that easily fooled.",
-      "You'll have to be a bit more creative than just asking."
+      "You'll have to be a bit more creative than just asking.",
+      "Straight to the point, huh? Not gonna work like that."
     ]
   };
 
@@ -639,6 +651,7 @@
     const chatLog = details.querySelector('#chatLog');
     const chatInput = details.querySelector('#chatInput');
     const chatSendBtn = details.querySelector('#chatSendBtn');
+    let primed = false; // a framing/setup line has landed this conversation
 
     function appendMsg(text, cls){
       const msg = document.createElement('div');
@@ -654,11 +667,13 @@
       appendMsg(val, 'user');
       chatInput.value = '';
 
-      const isTrigger = AI_CHALLENGE.triggers.some(re => re.test(val));
-      const isBlunt = !isTrigger && AI_CHALLENGE.blunt.some(re => re.test(val));
+      const hasFraming = AI_CHALLENGE.triggers.some(re => re.test(val));
+      const hasIntent = AI_CHALLENGE.intent.some(re => re.test(val));
+      const readyToLeak = hasIntent && (hasFraming || primed);
+      if(hasFraming) primed = true;
 
       setTimeout(()=>{
-        if(isTrigger){
+        if(readyToLeak){
           aiSolved = true;
           score += AI_CHALLENGE.points;
           updateStats();
@@ -670,8 +685,10 @@
             stopTimer();
             setTimeout(showComplete, 900);
           }
-        } else if(isBlunt){
+        } else if(hasIntent){
           appendMsg(pickRefusal(AI_CHALLENGE.bluntRefusals), 'bot');
+        } else if(hasFraming){
+          appendMsg(pickRefusal(AI_CHALLENGE.primeRefusals), 'bot');
         } else {
           appendMsg(pickRefusal(AI_CHALLENGE.refusals), 'bot');
         }
