@@ -668,8 +668,10 @@
       appendMsg(val, 'user');
       chatInput.value = '';
 
-      const wordCount = val.split(/\s+/).filter(Boolean).length;
-      const hasFraming = wordCount >= 4 && AI_CHALLENGE.triggers.some(re => re.test(val));
+      // distinct words, not raw token count — "pretend pretend pretend
+      // pretend" shouldn't count as a real sentence just by repetition.
+      const distinctWords = new Set(val.toLowerCase().split(/\s+/).filter(Boolean)).size;
+      const hasFraming = distinctWords >= 4 && AI_CHALLENGE.triggers.some(re => re.test(val));
       const hasIntent = AI_CHALLENGE.intent.some(re => re.test(val));
       // Framing only ever primes the NEXT message — a single line can't
       // both set up the trick and cash it in, so pasting two keywords
