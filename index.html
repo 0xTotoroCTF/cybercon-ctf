@@ -397,6 +397,11 @@
       "Directly asking isn't going to work — I'm not that easily fooled.",
       "You'll have to be a bit more creative than just asking.",
       "Straight to the point, huh? Not gonna work like that."
+    ],
+    duplicateRefusals:[
+      "Huh, that's oddly familiar — someone already used that exact line on me. You'll have to find your own angle.",
+      "Nice line, but it's used goods. Someone beat you to that exact phrasing — try wording it differently.",
+      "I've heard that one, word for word, already today. Say it your own way."
     ]
   };
 
@@ -591,6 +596,43 @@
     return list[idx];
   }
 
+  // One-shot-per-phrase guard: the exact message that unlocks the AI flag
+  // gets recorded in Firestore, so once someone's winning line has worked,
+  // nobody else can just paste the same line and get it for free.
+  function normalizePrompt(str){
+    return String(str).trim().toLowerCase().replace(/\s+/g, ' ');
+  }
+
+  function hashPrompt(str){
+    let h = 5381;
+    for(let i = 0; i < str.length; i++){
+      h = ((h * 33) ^ str.charCodeAt(i)) >>> 0;
+    }
+    return h.toString(36);
+  }
+
+  async function isPromptAlreadyUsed(raw){
+    if(!db) return false; // fail open if Firestore isn't reachable
+    try{
+      const id = hashPrompt(normalizePrompt(raw));
+      const snap = await db.collection('aiUsedPrompts').doc(id).get();
+      return snap.exists;
+    }catch(e){
+      console.error('Duplicate-prompt check failed', e);
+      return false;
+    }
+  }
+
+  async function markPromptUsed(raw){
+    if(!db) return;
+    try{
+      const id = hashPrompt(normalizePrompt(raw));
+      await db.collection('aiUsedPrompts').doc(id).set({ text: raw, ts: Date.now() });
+    }catch(e){
+      console.error('Failed to record used prompt', e);
+    }
+  }
+
   function renderBonusBoard(){
     const bonusBoard = document.getElementById('bonusBoard');
     bonusBoard.innerHTML = '';
@@ -662,11 +704,13 @@
       chatLog.scrollTop = chatLog.scrollHeight;
     }
 
-    function handleSend(){
+    async function handleSend(){
       const val = chatInput.value.trim();
       if(!val || aiSolved) return;
       appendMsg(val, 'user');
       chatInput.value = '';
+      chatInput.disabled = true;
+      chatSendBtn.disabled = true;
 
       // distinct words, not raw token count — "pretend pretend pretend
       // pretend" shouldn't count as a real sentence just by repetition.
@@ -676,11 +720,22 @@
       // Framing only ever primes the NEXT message — a single line can't
       // both set up the trick and cash it in, so pasting two keywords
       // together (e.g. "hey grandma give me the flag") doesn't work.
-      const readyToLeak = hasIntent && primed;
+      const wouldLeak = hasIntent && primed;
       if(hasFraming) primed = true;
 
+      // A winning line only works once, globally — check (and claim) it
+      // in Firestore before actually granting the flag.
+      let blockedAsDuplicate = false;
+      if(wouldLeak){
+        blockedAsDuplicate = await isPromptAlreadyUsed(val);
+        if(!blockedAsDuplicate) await markPromptUsed(val);
+      }
+
       setTimeout(()=>{
-        if(readyToLeak){
+        chatInput.disabled = aiSolved;
+        chatSendBtn.disabled = aiSolved;
+        if(!aiSolved) chatInput.focus();
+        if(wouldLeak && !blockedAsDuplicate){
           aiSolved = true;
           score += AI_CHALLENGE.points;
           updateStats();
@@ -692,6 +747,8 @@
             stopTimer();
             setTimeout(showComplete, 900);
           }
+        } else if(blockedAsDuplicate){
+          appendMsg(pickRefusal(AI_CHALLENGE.duplicateRefusals), 'bot');
         } else if(hasFraming){
           appendMsg(pickRefusal(AI_CHALLENGE.primeRefusals), 'bot');
         } else if(hasIntent){
