@@ -723,12 +723,15 @@
       const wouldLeak = hasIntent && primed;
       if(hasFraming) primed = true;
 
-      // A winning line only works once, globally — check (and claim) it
-      // in Firestore before actually granting the flag.
+      // A winning line only works once, globally — check it against
+      // Firestore before granting the flag. The "mark as used" write isn't
+      // awaited: we don't need it confirmed to answer the player, and not
+      // blocking on it keeps the reply from stacking a second network
+      // round-trip on top of the read (avoids a double delay).
       let blockedAsDuplicate = false;
       if(wouldLeak){
         blockedAsDuplicate = await isPromptAlreadyUsed(val);
-        if(!blockedAsDuplicate) await markPromptUsed(val);
+        if(!blockedAsDuplicate) markPromptUsed(val);
       }
 
       setTimeout(()=>{
